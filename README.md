@@ -107,24 +107,40 @@ con el diseño real, y luego pasas esos datos a `seed.js`.
 
 ## Despliegue en Vercel
 
-`vercel.json` ya está configurado (`npm run build` → `dist/`). La app usa
-**hash router** (`#/admin`), así que **no hace falta ninguna regla de rewrite**.
+### 🟢 En producción
+
+> **https://casino-eight-sepia.vercel.app**
+
+| | |
+|---|---|
+| Proyecto Vercel | `casino` (equipo `alteregooffline-afk`, plan Hobby) |
+| Dominio | `casino-eight-sepia.vercel.app` |
+| Origen | GitHub `alteregooffline-afk/Casino` → `main` |
+| Build | `npm run build` → `dist/` (fijado en `vercel.json`) |
+| Estado | Ready |
+
+La app usa **hash router** (`#/admin`), así que **no hace falta ninguna regla de rewrite**.
+
+### Flujo de publicación
+
+Cada `git push` a `main` despliega **solo**, en ~40 s:
 
 ```bash
-# 1. instalar git (hoy NO está instalado en esta máquina)
-winget install Git.Git
-
-# 2. abrir una terminal NUEVA para que cargue el PATH, y luego:
-cd "C:\Users\Dell\OneDrive\Documentos\OPENCODE"
-git init
 git add .
-git commit -m "Tienda de beats - fase A"
+git commit -m "Descripción del cambio"
+git push          # ← Vercel construye y publica automáticamente
+```
 
-# 3. crear el repo en GitHub y subirlo
-git remote add origin https://github.com/TU-USUARIO/TU-REPO.git
+> Git está instalado como **MinGit portable** en
+> `%LOCALAPPDATA%\Programs\Git\cmd` (añadido al PATH de usuario).
+> **No** usa winget ni requiere permisos de administrador.
+
+### Si hay que reconectar desde cero
+
+```bash
+git remote add origin https://github.com/alteregooffline-afk/Casino.git
 git push -u origin main
-
-# 4. en vercel.com → "Add New…" → "Project" → importa el repo → Deploy
+# vercel.com → Add New… → Project → importa el repo → Deploy
 ```
 
 > Vercel detecta Vite solo. Si prefieres la CLI: `npm i -g vercel` y `vercel`.
@@ -155,9 +171,14 @@ Nada de esto está hecho todavía y **sin ello no se puede vender de verdad**:
 
 ## Estado
 
+- **🟢 DESPLEGADO EN PRODUCCIÓN**: https://casino-eight-sepia.vercel.app
+  — proyecto Vercel `casino`, rama `main`, build `npm run build` → `dist/`.
+  Verificado en vivo: `lang="en"`, 11 CDs, panel, botón BUY activo, 0 errores JS.
+  (Los 404 de `/covers/beat-00X.jpg` son esperados: `public/covers/` está vacío
+  y la ruta ya apunta correctamente — en cuanto se suban las imágenes se ven.)
 - **Fase A COMPLETADA**: `index.html` en inglés (`lang="en"`), metadatos sociales
   (OG + Twitter), enlace Admin oculto, estructura `public/covers` + `public/audio`,
-  `vercel.json` listo y documentación de despliegue. `npm run build` pasa.
+  `vercel.json` configurado y documentación de despliegue. `npm run build` pasa.
 - Step 1 COMPLETADO: `npm install`, `npm run build` y `npm run dev` funcionan.
 - Step 2 COMPLETADO: acceso a datos aislado tras `dataAdapter` → `localAdapter`.
   Interfaz: `getBeats · getBeat · getPublishedBeats · createBeat · updateBeat ·
