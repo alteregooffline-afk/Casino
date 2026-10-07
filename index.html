@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Producer Name — Beats & Sound</title>
+<meta name="description" content="Original beats and productions by Producer Name.">
+<meta property="og:title" content="Producer Name — Beats & Sound"><meta property="og:description" content="Original beats and productions by Producer Name."><meta property="og:type" content="website"><meta property="og:site_name" content="Beats & Sound"><meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary"><meta name="twitter:title" content="Producer Name — Beats & Sound"><meta name="twitter:description" content="Original beats and productions by Producer Name.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./src/styles/main.css">
+</head>
+<body>
+<header>Beats<span>Vol. 1 Collection</span><!-- Admin oculto en producción. Acceso: añade #/admin al final de la URL. --></header>
+<div class="hint" id="hint">Click a CD to hear its preview</div>
+<main class="stage" id="stage" aria-label="Beat collection">
+  <div class="scene" id="scene"></div>
+</main>
+<section class="info" id="info" aria-label="Selected beat">
+  <button class="x" id="close" type="button" aria-label="Close panel">&times;</button>
+  <div class="pb" id="pb">
+    <h1 id="title" aria-live="polite"></h1>
+    <p class="meta" id="meta"></p><p class="genre" id="genre"></p><p class="tags" id="tags"></p>
+    <p class="desc" id="desc"></p><button class="more" id="more" type="button" aria-expanded="false" hidden>MORE</button>
+  </div>
+  <div class="player" id="player" data-state="idle" role="group" aria-label="Preview player">
+    <button class="pp" id="pp" type="button" aria-label="Play preview"><svg class="pl" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z"/></svg><svg class="ps" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2h3.5v12H3zM9.5 2H13v12H9.5z"/></svg></button>
+    <div class="wf" id="wf" role="progressbar" aria-label="Preview progress" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0"><div class="bars" id="b0"></div><div class="bars fill" id="b1"></div><i class="ph"></i></div>
+    <output class="tm" id="time">0:00 / 0:30</output>
+  </div>
+  <div class="sub"><span id="status" role="status">Press play to listen</span><input class="vol" id="vol" type="range" min="0" max="100" value="80" aria-label="Volume"></div>
+  <div class="buy"><div class="pr"><b id="price"></b><small id="lic"></small></div><a class="btn" id="buy" target="_blank" rel="noopener noreferrer">BUY</a></div>
+</section>
+<div id="adm" hidden>
+  <nav class="an" aria-label="Admin"><b>Producer admin</b><a href="#/admin">Dashboard</a><a href="#/admin/beats">Beats</a><a href="#/admin/beats/new">Add beat</a><a href="#/admin/settings">Settings</a><a href="#/">Store &#8599;</a></nav>
+  <main id="am"></main><div id="toast" role="status"></div><dialog id="dlg"></dialog>
+</div>
+<nav class="nav" aria-label="Browse beats">
+  <button type="button" id="prev" aria-label="Previous beat">&#8592;</button>
+  <output id="count" aria-live="off"></output>
+  <button type="button" id="next" aria-label="Next beat">&#8594;</button>
+</nav>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
