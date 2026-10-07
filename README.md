@@ -91,19 +91,60 @@ if(!list) list = SEED.map(...);
 - **El admin** escribe en `localStorage` → solo afecta **a tu navegador**.
 - Por tanto: **lo que cambies en el admin NO llega a la tienda pública.**
 
-### Flujo para publicar un cambio en el catálogo
+### 🎛 El admin: existe **solo en local**
 
-1. Edita `src/data/seed.js` (es editable, **1 línea por beat** con overrides):
+- El enlace de Admin está **oculto** en la web pública.
+- Además la ruta `#/admin` **redirige a la tienda en todo dominio que no sea
+  `localhost`** (`LOCAL_ADM` en `src/admin.js`). Es decir: **el admin no existe
+  en producción**, ni siquiera escribiendo la URL a mano.
 
-   ```js
-   beat(1,"NIGHT SHIFT",{bpm:142, price:29.99, buyUrl:"https://payhip.com/b/XXXX"})
-   ```
+Se abre en local:
 
-2. `npm run build`
-3. Despliega (Vercel hace auto-deploy si conectas el repo de Git)
+```bash
+npm run dev
+# → http://localhost:5173/#/admin
+```
 
-El admin sigue siendo útil como **previsualizador**: montas el beat a mano, lo ves
-con el diseño real, y luego pasas esos datos a `seed.js`.
+Desde ahí se cambian **covers, audios, precios, licencias, links de Payhip, BPM,
+estado (draft/published/hidden)** y se **añaden beats nuevos** — todo lo del
+formulario de 6 fieldsets.
+
+### 📤 Botón `Export to project…` (dashboard)
+
+Es lo que convierte el admin local en una publicación real. Escribe en tu carpeta
+del proyecto:
+
+| Destino | Contenido |
+|---|---|
+| `src/data/seed.js` | el catálogo completo, como objetos planos |
+| `public/covers/` | los covers que subiste en el admin |
+| `public/audio/` | los audios que subiste en el admin |
+
+**¿Por qué saca también los ficheros?** Porque al subir un cover/audio el admin lo
+guarda en **IndexedDB** con una referencia opaca `media:img-…`, y eso **solo existe
+en tu navegador**. Si no lo exportaras, el visitante vería el fallback (`art()`) y
+el audio demo. El export reescribe esas referencias a rutas reales:
+`media:img-…` → `covers/beat-001.png`.
+
+Pide elegir la **carpeta raíz del proyecto** (la que contiene `package.json`) y
+funciona en **Chrome, Edge o Brave** (File System Access API).
+
+> Tras exportar, `seed.js` queda como **objetos planos** (`const SEED = [ … ]`),
+> sin el helper `beat(n,título,overrides)` — porque un beat creado en el admin
+> puede tener un `id` que ese helper no podría regenerar. Puedes seguir tocándolo
+> a mano, pero lo cómodo es **editar en el admin y reexportar**.
+
+### Flujo completo para publicar un cambio
+
+```bash
+npm run dev                       # 1. admin local
+#    → http://localhost:5173/#/admin
+#    → editar beats → "Export to project…" → elegir la carpeta del proyecto
+npm run build                     # 2. compila
+git add .                         # 3. publica
+git commit -m "update catalog"
+git push                          # ← Vercel despliega solo (~40 s)
+```
 
 ## Despliegue en Vercel
 
@@ -165,12 +206,20 @@ Nada de esto está hecho todavía y **sin ello no se puede vender de verdad**:
       y las tarjetas de Twitter.
 - [ ] **Compra de prueba real** de principio a fin con tarjeta.
 - [ ] Páginas legales: términos, privacidad, reembolsos, acuerdo de licencia.
-- [ ] Enlace **Admin**: el de la cabecera está oculto. Acceso escribiendo
-      `https://TU-DOMINIO/#/admin` a mano. (Para restaurarlo, ver comentario en
-      `index.html`.)
+- [x] **Enlace Admin**: oculto en la cabecera **y** bloqueado en producción
+      (`#/admin` redirige a la tienda en cualquier dominio que no sea
+      `localhost`). Uso real: `npm run dev` → `localhost:5173/#/admin`.
 
 ## Estado
 
+- **🟢 ADMIN LOCAL CON EXPORTACIÓN**: el admin (`#/admin`) **solo funciona en
+  `localhost`** — en producción redirige a la tienda, así que no hay panel
+  público. Nuevo botón **`Export to project…`** en el dashboard: escribe
+  `src/data/seed.js` + extrae los covers/audios de IndexedDB a
+  `public/covers/` y `public/audio/`, reescribiendo `media:…` → rutas reales.
+  Verificado: 12 beats, `JSON.parse` correcto, mapeo inverso de estado
+  (`coming-soon`/`sold`/`hidden`), extracción de media (252 B escritos),
+  0 errores de consola.
 - **🟢 DESPLEGADO EN PRODUCCIÓN**: https://casino-eight-sepia.vercel.app
   — proyecto Vercel `casino`, rama `main`, build `npm run build` → `dist/`.
   Verificado en vivo: `lang="en"`, 11 CDs, panel, botón BUY activo, 0 errores JS.

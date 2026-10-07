@@ -14,7 +14,10 @@ const dataAdapter=(()=>{
         live=()=>list.filter(p=>!p.deletedAt),
         now=()=>new Date().toISOString();
   if(!list){   // migracion inicial: los beats de demo pasan al modelo de producto (status: draft|published|hidden; availability: available|coming-soon|sold)
-    list=SEED.map((b,i)=>({...b,type:"beat",slug:slugify(b.title),availability:b.status==="hidden"?"available":b.status,status:b.status==="hidden"?"hidden":"published",createdAt:new Date(t0+i*864e5).toISOString(),updatedAt:new Date(t0+i*864e5).toISOString(),deletedAt:null}));
+    /* En seed.js `status` es la disponibilidad (available|coming-soon|sold) y
+       tambien puede ser hidden o draft — esos dos no son un estado publico. */
+    const NONPUB=new Set(["hidden","draft"]);
+    list=SEED.map((b,i)=>({...b,type:"beat",slug:b.slug||slugify(b.title),availability:NONPUB.has(b.status)?"available":b.status,status:NONPUB.has(b.status)?b.status:"published",createdAt:new Date(t0+i*864e5).toISOString(),updatedAt:new Date(t0+i*864e5).toISOString(),deletedAt:null}));
     localAdapter.kvSet(KEY,list)}
   const strip=o=>{const{id:_i,createdAt:_c,updatedAt:_u,...rest}=o;return rest};   // id/fechas los decide el adapter, no la UI
   const api={

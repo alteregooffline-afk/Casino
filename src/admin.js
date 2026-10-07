@@ -26,8 +26,13 @@ function problems(p,full,audioDur){
     if(!(p.price>0))e.push("Price is required.");if(!p.currency)e.push("Currency is required.");if(!p.buyUrl)e.push("Payhip URL is missing.")}
   return e}
 let dirty=false,aud=null;dataAdapter.subscribe(()=>dirty=true);
+/* El admin solo existe en local: la web desplegada no lo sirve.
+   En producción los datos del admin vivirían en el localStorage del visitante
+   (no publicarían nada), así que se redirige a la tienda. */
+const LOCAL_ADM=["localhost","127.0.0.1","[::1]"].includes(location.hostname);
 function route(){
   const parts=location.hash.replace(/^#\/?/,"").split("/"),isA=parts[0]==="admin";
+  if(isA&&!LOCAL_ADM){location.replace("#/");return}
   ADM.hidden=!isA;
   if(isA){closePanel();Engine.release();if(aud)aud.pause();
     ADM.querySelectorAll(".an a").forEach(a=>a.toggleAttribute("aria-current",a.getAttribute("href")===location.hash||(a.getAttribute("href")==="#/admin/beats"&&/beats\/.+edit/.test(location.hash))));
@@ -37,7 +42,7 @@ function route(){
 addEventListener("hashchange",route);
 function dash(){
   const L=dataAdapter.getBeats(),c=s=>L.filter(p=>p.status===s).length;
-  AM.innerHTML=`<h2>Producer dashboard</h2><div class="st">${[["Beats",L.length],["Published",c("published")],["Drafts",c("draft")],["Hidden",c("hidden")]].map(([a,b])=>`<div><b>${b}</b><span>${a}</span></div>`).join("")}</div><a class="ab" href="#/admin/beats/new">+ ADD NEW BEAT</a><h3>Recent beats</h3>${L.length?`<ul class="rc">${[...L].sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)).slice(0,5).map(p=>`<li><a href="#/admin/beats/${p.id}/edit">${esc(p.title)}</a><i class="pill ${p.status}">${p.status}</i></li>`).join("")}</ul>`:EMPTY}`}
+  AM.innerHTML=`<h2>Producer dashboard</h2><div class="st">${[["Beats",L.length],["Published",c("published")],["Drafts",c("draft")],["Hidden",c("hidden")]].map(([a,b])=>`<div><b>${b}</b><span>${a}</span></div>`).join("")}</div><a class="ab" href="#/admin/beats/new">+ ADD NEW BEAT</a><div class="ac" style="margin-top:10px;align-items:center;flex-wrap:wrap"><button class="ab" id="xp" type="button">Export to project…</button><small style="opacity:.75">Writes src/data/seed.js and the media files into public/</small></div><h3>Recent beats</h3>${L.length?`<ul class="rc">${[...L].sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)).slice(0,5).map(p=>`<li><a href="#/admin/beats/${p.id}/edit">${esc(p.title)}</a><i class="pill ${p.status}">${p.status}</i></li>`).join("")}</ul>`:EMPTY}`}
 const Q={q:"",st:"all",sort:"new"},SORTS={new:["Newest",(a,b)=>b.createdAt.localeCompare(a.createdAt)],old:["Oldest",(a,b)=>a.createdAt.localeCompare(b.createdAt)],az:["Title A-Z",(a,b)=>a.title.localeCompare(b.title)],za:["Title Z-A",(a,b)=>b.title.localeCompare(a.title)],lo:["Price low-high",(a,b)=>a.price-b.price],hi:["Price high-low",(a,b)=>b.price-a.price],bpm:["BPM",(a,b)=>a.bpm-b.bpm]};
 function list(){
   AM.innerHTML=`<h2>Beats</h2><div class="tb"><input id="q" type="search" placeholder="Search title, ID, genre, key, BPM…" aria-label="Search beats" value="${esc(Q.q)}"><select id="fs" aria-label="Filter by status">${["all","published","draft","hidden"].map(s=>`<option${s===Q.st?" selected":""}>${s}</option>`).join("")}</select><select id="so" aria-label="Sort">${Object.entries(SORTS).map(([k,v])=>`<option value="${k}"${k===Q.sort?" selected":""}>${v[0]}</option>`).join("")}</select><a class="ab" href="#/admin/beats/new">+ ADD BEAT</a></div><div id="rows"></div>`;
@@ -48,7 +53,57 @@ function rows(){
   const L=all.filter(p=>(Q.st==="all"||p.status===Q.st)&&(!t||[p.title,p.id,p.genre,p.key,p.bpm].join(" ").toLowerCase().includes(t))).sort(SORTS[Q.sort][1]);
   $("#rows").innerHTML=L.length?L.map(row).join(""):all.length?'<p class="em">No beats match your search.</p>':EMPTY;
   AM.querySelectorAll("img[data-cv]").forEach(async i=>{const id=i.closest("[data-id]").dataset.id;i.onerror=()=>{i.onerror=null;i.src=art({title:"",id},parseInt(id.slice(5)))};i.src=(await dataAdapter.getMedia(i.dataset.cv)).url||"covers/none.jpg"})}
+/* ===== Exportar el catálogo al proyecto =====
+   Escribe src/data/seed.js y mueve los blobs de cover/audio de IndexedDB a
+   public/ — porque un ref "media:" solo existe en TU navegador: el visitante
+   no lo podría cargar. Usa la File System Access API (Chrome/Edge/Brave). */
+const EXT={"image/jpeg":"jpg","image/jpg":"jpg","image/png":"png","image/webp":"webp","audio/mpeg":"mp3","audio/mp3":"mp3","audio/wav":"wav","audio/x-wav":"wav","audio/ogg":"ogg"};
+const wr=async(dir,name,data)=>{const fh=await dir.getFileHandle(name,{create:true}),w=await fh.createWritable();await w.write(data);await w.close()};
+const blobOf=async ref=>{try{const {url}=await dataAdapter.getMedia(ref);return url?await (await fetch(url)).blob():null}catch(e){return null}};
+async function exportProject(){
+  if(!("showDirectoryPicker" in window)){await ask("Export needs Chrome, Edge or Brave","Open the admin on localhost with one of those browsers so it can write the files into your project.");return}
+  let root;try{root=await showDirectoryPicker({mode:"readwrite"})}catch(e){return}
+  let isProj=false;try{await root.getFileHandle("package.json");isProj=true}catch(e){}
+  if(!isProj){await ask("That is not the project folder","Select the folder that contains <code>package.json</code>, <code>src/</code> and <code>public/</code>.");return}
+  const beats=dataAdapter.getBeats(),out=[];let nc=0,na=0,miss=0;
+  try{
+    const data=await (await root.getDirectoryHandle("src",{create:true})).getDirectoryHandle("data",{create:true});
+    const pub=await root.getDirectoryHandle("public",{create:true});
+    const cov=await pub.getDirectoryHandle("covers",{create:true});
+    const aud=await pub.getDirectoryHandle("audio",{create:true});
+    for(const p of beats){
+      const o={...p};
+      /* inverso del mapeo de dataAdapter: availability → status del seed */
+      o.status=p.status==="published"?(p.availability||"available"):p.status;
+      delete o.availability;delete o.createdAt;delete o.updatedAt;delete o.deletedAt;
+      if(String(o.cover||"").startsWith("media:")){
+        const b=await blobOf(o.cover);
+        if(b){const n=`${p.id}.${EXT[b.type]||"jpg"}`;await wr(cov,n,b);o.cover="covers/"+n;nc++}
+        else{delete o.cover;miss++}
+      }
+      if(String(o.audio||"").startsWith("media:")){
+        const b=await blobOf(o.audio);
+        if(b){const n=`${p.id}.${EXT[b.type]||"mp3"}`;await wr(aud,n,b);o.audio="audio/"+n;na++}
+        else{delete o.audio;miss++}
+      }
+      out.push(o);
+    }
+    await wr(data,"seed.js",`/* ===== DATOS DEL CATÁLOGO — generado por el admin =====
+   No edites a mano: edita en \`npm run dev\` → #/admin y vuelve a exportar.
+   cover y audio son rutas relativas a public/. */
+const SEED = ${JSON.stringify(out,null,2)};
+export { SEED };
+`);
+  }catch(err){await ask("Export failed",esc(err&&err.message||String(err)));return}
+  await ask("Exported",
+    `${out.length} beats → <code>src/data/seed.js</code><br>`+
+    `${nc} cover${nc===1?"":"s"} → <code>public/covers/</code><br>`+
+    `${na} audio → <code>public/audio/</code>`+
+    (miss?`<br><b>${miss} media file${miss===1?"":"s"} could not be read</b>`:"")+
+    `<br><br>Now publish with:<br><code>git add . &amp;&amp; git commit -m "update catalog" &amp;&amp; git push</code>`);
+}
 AM.addEventListener("click",async e=>{
+  if(e.target.closest("#xp")){exportProject();return}
   const b=e.target.closest("[data-a]"),row=b&&b.closest("[data-id]"),p=row&&dataAdapter.getBeat(row.dataset.id);if(!p)return;const a=b.dataset.a;
   if(a==="dup"){const n=dataAdapter.createBeat({...p,title:p.title+" COPY",slug:dataAdapter.uniqueSlug(p.slug+"-copy"),status:"draft"});toast("Duplicated");location.hash="#/admin/beats/"+n.id+"/edit"}
   else if(a==="unpub"){dataAdapter.unpublishBeat(p.id);toast("Unpublished");rows()}
