@@ -33,7 +33,7 @@ const dataAdapter=(()=>{
 
   /* ---------- Ajustes de la tienda ---------- */
   const SKEY="shop:settings",
-        DEFAULTS={producer:"Producer Name",store:"Beats & Sound",currency:"USD",previewDuration:30};
+        DEFAULTS={producer:"Zeven",store:"Beats & Sound",currency:"USD",previewDuration:30};
   const settings={
     get:()=>({...DEFAULTS,...localAdapter.kvGet(SKEY,{})}),
     update:patch=>localAdapter.kvSet(SKEY,{...localAdapter.kvGet(SKEY,{}),...patch})};
