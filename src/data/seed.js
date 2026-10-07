@@ -1,23 +1,20 @@
 /* ===== DATOS: añade o edita beats aquí. Cada objeto genera un CD. =====
-   cover: ruta de la imagen (si no existe, se genera un cover provisional).
-   audio, previewStart, previewDuration, buyUrl: reservados para la etapa 2. */
+   cover:    ruta de la imagen dentro de public/ (si no existe, se genera un cover provisional).
+   audio:    ruta del MP3 de preview dentro de public/ (null = suena el beat de demostración).
+   buyUrl:   enlace de compra de Payhip (checkout directo con la variante mp3 fijada).
+   status:   available | coming-soon | sold | hidden (hidden existe en los datos pero no sale en la galería)
+   bpm/key/genre/mood/duration son opcionales: si están vacíos no se pintan en el panel. */
 const D={type:"beat",currency:"USD",license:"Basic Lease",previewDuration:30,status:"available",duration:"3:00",price:29.99,tags:[],description:""};
-const beat=(n,title,o)=>{const id="beat-"+String(n).padStart(3,"0"),slug=title.toLowerCase().replace(/ /g,"-");
-  return{...D,id,title,cover:"covers/"+id+".jpg",audio:n<=6?"audio/"+slug+".mp3":null,buyUrl:"https://payhip.com/b/DEMO"+n,...o}};
-/* status: available | coming-soon | sold | hidden (hidden existe en los datos pero no sale en la galería) */
+const beat=(n,title,o)=>{const id="beat-"+String(n).padStart(3,"0");
+  return{...D,id,title,cover:"covers/"+id+".jpg",audio:null,buyUrl:null,...o}};
 const SEED=[
-  beat(1,"NIGHT SHIFT",{bpm:142,key:"C minor",genre:"Trap",mood:"Dark / Atmospheric",duration:"3:14",previewStart:42,tags:["dark","trap","cinematic"],description:"Dark atmospheric production with cinematic textures, distorted synths and heavy drums built for late-night drives and slow-motion hooks."}),
-  beat(2,"AFTER HOURS",{bpm:128,key:"F minor",genre:"R&B",mood:"Late / Smooth",duration:"2:58",previewStart:71,price:24.99,tags:["rnb","smooth","night"],description:"Silky keys over a patient groove."}),
-  beat(3,"VOID",{bpm:150,key:"D minor",genre:"Drill",mood:"Cold / Aggressive",duration:"2:41",previewStart:28,price:34.99,tags:["drill","cold","sliding"],description:"Sliding 808s and icy strings."}),
-  beat(4,"NO SIGNAL",{bpm:140,key:"A minor",genre:"Trap",mood:"Eerie / Minimal",duration:"3:02",previewStart:94,tags:["eerie","minimal","trap"],description:"Sparse, tense and hypnotic."}),
-  beat(5,"MIDNIGHT",{bpm:96,key:"G minor",genre:"Boom Bap",mood:"Dusty / Nostalgic",duration:"3:20",previewStart:60,price:19.99,tags:["boombap","dusty","sample"],description:"Dusty drums and a looped piano sample."}),
-  beat(6,"ECLIPSE",{bpm:132,key:"E minor",genre:"Ambient",mood:"Wide / Dreamy",duration:"3:45",previewStart:18,buyUrl:null,tags:["ambient","dreamy"],description:"Wide pads and slow pulses. No buyUrl set, so it shows COMING SOON."}),
-  beat(7,"VELVET",{bpm:88,key:"Bb major",genre:"Soul",mood:"Warm / Lush",previewStart:44,price:27,currency:"EUR",status:"coming-soon",tags:["soul","warm"],description:"Warm chords, live bass feel."}),
-  beat(8,"SLOW BURN",{bpm:74,key:"C# minor",genre:"R&B",mood:"Moody / Sensual",previewStart:52,status:"sold",tags:["rnb","moody"],description:"Already sold."}),
-  beat(9,"DARK ROOM",{bpm:146,key:"F# minor",genre:"Trap",mood:"Dark / Heavy",previewStart:31,tags:["dark","trap"],description:"Heavy low end, detuned bells."}),
-  beat(10,"PARALLEL",{bpm:120,key:"D major",genre:"Electronic",mood:"Bright / Driving",previewStart:66,price:39.99,tags:["electronic","bright"],description:"Four-on-the-floor energy."}),
-  beat(11,"NOVA",{bpm:160,key:"A major",genre:"Hyperpop",mood:"Glitchy / Euphoric",previewStart:22,tags:["hyperpop","glitch"],description:"Pitched vocals and shiny leads."}),
-  beat(12,"AFTERIMAGE",{bpm:110,key:"B minor",genre:"Lo-fi",mood:"Soft / Hazy",previewStart:49,status:"hidden",tags:["lofi"],description:"Hidden: it exists in the data but is not shown in the gallery."})
+  beat(1,"Phenomenon",{bpm:133,key:"F minor",genre:"Trap",mood:"Hard / Dark",previewStart:0,price:29.99,buyUrl:"https://payhip.com/buy?s=1&variant_combination[2vO6q]=1773225248074&cart_links[]=2vO6q&qty[2vO6q]=1",tags:["trap","hard","don-toliver"],description:"This is a Hard beat inspired by Don toliver album OCTANE. By this I do not mean that it is a copy; the beat is 100% original from my own understanding"}),
+  beat(2,"Funeral Flowers",{genre:"House",mood:"Dark / Melancholic",previewStart:0,price:29.99,buyUrl:"https://payhip.com/buy?s=1&variant_combination[SMsWl]=1778683467175&cart_links[]=SMsWl&qty[SMsWl]=1",tags:["house","dark","drake"],description:"A beat inspired by Drake's album 'Honestly, Nevermind' is a dark and melancholic house beat but with plenty of movement inspired by the production of DJ Black Coffee."}),
+  beat(3,"Flashbacks",{genre:"Electronic",mood:"Bouncy / Nostalgic",previewStart:0,price:29.99,buyUrl:"https://payhip.com/buy?s=1&variant_combination[tiAsP]=1778857508751&cart_links[]=tiAsP&qty[tiAsP]=1",tags:["electronic","bounce","drake"],description:"A beat inspired by the vibes of Drake's recently released album ' MAID OF HONOUR ', with electronic touches and a style with a very marked bounce."}),
+  beat(4,"Last Weekend",{genre:"R&B",mood:"Melancholic / Smooth",previewStart:0,price:29.99,buyUrl:"https://payhip.com/buy?s=1&variant_combination[t4pHE]=1778858147476&cart_links[]=t4pHE&qty[t4pHE]=1",tags:["rnb","melancholic","drake"],description:"A beat inspired by the vibes of Drake's recently released album ' HABIBTI ', with touches of Rnb and a very marked melancholic style"}),
+  beat(5,"Semitones",{genre:"House",mood:"Bright / Driving",previewStart:0,price:29.99,buyUrl:"https://payhip.com/buy?s=1&variant_combination[EeS5T]=1777064617981&cart_links[]=EeS5T&qty[EeS5T]=1",tags:["house","bright","boi1da"],description:"This is a house beat inspired by Drake and Boi1da. By this I do not mean that it is a copy; the beat is 100% original from my own understanding."}),
+  beat(6,"Don´t let me",{bpm:62,key:"F minor",genre:"Trap",mood:"Soul / Warm",previewStart:0,price:29.99,buyUrl:"https://payhip.com/buy?s=1&variant_combination[DKwOP]=1775754576148&cart_links[]=DKwOP&qty[DKwOP]=1",tags:["trap","soul","boi1da"],description:"This is a soul trap beat inspired by Drake and Boi1da. By this I do not mean that it is a copy; the beat is 100% original from my own understanding."}),
+  beat(7,"Where it is?",{genre:"Trap",mood:"Pure trap / Cinematic",previewStart:0,price:29.99,buyUrl:"https://payhip.com/buy?s=1&variant_combination[2IFON]=1778861789116&cart_links[]=2IFON&qty[2IFON]=1",tags:["trap","iceman","future"],description:"A beat inspired by the vibes of Drake's recently released album 'ICEMAN', with a pure trap vibe and style, accompanied by artists like FUTURE."})
 ];
 
 export { D, beat, SEED };
